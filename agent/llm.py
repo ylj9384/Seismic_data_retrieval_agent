@@ -10,6 +10,3 @@ def get_kimi_llm():
 	model="moonshot-v1-8k",
 	openai_api_key=os.environ.get("OPENAI_API_KEY")
 )
-
-
-
