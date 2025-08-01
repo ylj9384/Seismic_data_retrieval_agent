@@ -1,0 +1,8 @@
+agent/
+├── __init__.py
+├── state.py            # 状态定义
+├── nodes.py            # 节点定义
+├── tools.py            # 工具函数
+├── tool_registry.py    # 工具注册
+├── prompt_templates.py # 提示词模板
+└── agent_initializer.py # 主流程图构建
