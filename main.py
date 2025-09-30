@@ -5,7 +5,7 @@ import pprint
 import traceback
 from langchain_openai import ChatOpenAI
 from orchestrator.system import OrchestratorSystem
-from data_retrieval.llm import get_kimi_llm
+from config.llm import get_kimi_llm, get_qwen_llm
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 def main():
     # 初始化LLM
-    llm = get_kimi_llm()
+    # llm = get_kimi_llm()
+    llm = get_qwen_llm()
     
     # 创建编排系统
     system = OrchestratorSystem(llm=llm, mode="supervisor")
@@ -63,6 +64,7 @@ def main():
             logger.error(f"系统执行出错: {e}")
             print(f"\n执行出错: {e}")
             logger.error(f"详细错误信息: {traceback.format_exc()}")
+
 
 if __name__ == "__main__":
     main()
