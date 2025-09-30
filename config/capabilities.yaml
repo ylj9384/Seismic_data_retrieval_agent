@@ -1,0 +1,38 @@
+agents:
+  data_retrieval:
+    description: 地震数据/波形获取与基础绘图
+    tools:
+      GetWaveforms:
+        description: 获取多台站波形
+        module: data_retrieval.tools
+        function: get_waveforms
+        params:
+          stations: list            # 台站代码列表 (如 ["A","B"])
+          starttime: str            # ISO 或相对时间 (now-600s)
+          endtime: str
+          channels: str             # 通道模式 HH? / BH?
+        defaults:
+            channels: "HH?"
+  phase_detection:
+    description: 震相拾取 / 检测 / 汇总
+    tools:
+      DetectPhases:
+        description: 对波形执行震相拾取与事件检测
+        module: phase_detection.tools
+        function: detect_phases
+        params:
+          waveforms_ref: str        # 引用 @Sx.waveforms
+          models: list
+          p_threshold: float
+          s_threshold: float
+        defaults:
+          models: ["EQTransformer"]
+          p_threshold: 0.3
+          s_threshold: 0.3
+      Summarize:
+        description: 汇总拾取结果并形成结论
+        module: phase_detection.tools
+        function: summarize_detection
+        params:
+          phase_result_ref: str
+        defaults: {}
