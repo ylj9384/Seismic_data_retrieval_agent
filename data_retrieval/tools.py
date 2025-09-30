@@ -143,8 +143,31 @@ client = HybridClient()
 # 工具函数定义 - 规范化返回值为字典，便于LangGraph处理
 # LangGraph 框架下不需要添加 @tool 装饰器，它采用了更灵活、更明确的节点和工具引用方式。
 
+def check_required_params(params: dict, required: list):
+    """检查必需参数是否齐全，返回缺失项列表"""
+    missing = [p for p in required if not params.get(p)]
+    return missing
+
 def retrieve_waveforms(network: str, station: str, location: str, channel: str, starttime: str, endtime: str) -> Dict[str, Any]:
     """获取波形数据信息"""
+    # 参数校验
+    params = {
+        "network": network,
+        "station": station,
+        "location": location,
+        "channel": channel,
+        "starttime": starttime,
+        "endtime": endtime
+    }
+    required = ["network", "station", "location", "channel", "starttime", "endtime"]
+    missing = check_required_params(params, required)
+    if missing:
+        return {
+            "clarification_needed": True,
+            "missing_params": missing,
+            "output": f"缺少参数：{', '.join(missing)}，请补充。"
+        }
+    
     logger.info(f"调用 retrieve_waveforms: {network}.{station}.{location}.{channel}")
     
      # 解析位置代码的自然语言描述
@@ -220,6 +243,13 @@ def download_waveforms(waveform_data: str, format: str = "MSEED") -> Dict[str, A
     Returns:
         包含下载结果信息的字典
     """
+    # 参数校验
+    if not waveform_data:
+        return {
+            "clarification_needed": True,
+            "missing_params": ["waveform_data"],
+            "output": "缺少参数：waveform_data，请补充。"
+        }
     logger.info(f"调用 download_waveforms: {waveform_data}, 格式: {format}")
     try:
         # 解析参数
@@ -284,6 +314,13 @@ def plot_waveforms(waveform_data: str, filter_type: str = "none", freqmin: float
     Returns:
         包含绘图结果信息的字典
     """
+    # 参数校验
+    if not waveform_data:
+        return {
+            "clarification_needed": True,
+            "missing_params": ["waveform_data"],
+            "output": "缺少参数：waveform_data，请补充。"
+        }
     logger.info(f"调用 plot_waveforms: {waveform_data}, 滤波: {filter_type}")
     try:
         # 解析参数
@@ -346,6 +383,19 @@ def plot_waveforms(waveform_data: str, filter_type: str = "none", freqmin: float
 
 def retrieve_events(starttime: str, endtime: str, minmagnitude: float) -> Dict[str, Any]:
     """获取地震事件数据"""
+    params = {
+        "starttime": starttime,
+        "endtime": endtime,
+        "minmagnitude": minmagnitude
+    }
+    required = ["starttime", "endtime", "minmagnitude"]
+    missing = check_required_params(params, required)
+    if missing:
+        return {
+            "clarification_needed": True,
+            "missing_params": missing,
+            "output": f"缺少参数：{', '.join(missing)}，请补充。"
+        }
     logger.info(f"调用 retrieve_events: {starttime} - {endtime}, 最小震级 {minmagnitude}")
     try:
         catalog = client.robust_call(
@@ -386,6 +436,12 @@ def retrieve_events(starttime: str, endtime: str, minmagnitude: float) -> Dict[s
 
 def plot_catalog(catalog_data: str) -> Dict[str, Any]:
     """生成地震目录图表"""
+    if not catalog_data:
+        return {
+            "clarification_needed": True,
+            "missing_params": ["catalog_data"],
+            "output": "缺少参数：catalog_data，请补充。"
+        }
     logger.info(f"调用 plot_catalog: {catalog_data}")
     try:
         starttime, endtime, minmagnitude = catalog_data.split("|")
@@ -432,6 +488,12 @@ def download_catalog_data(catalog_data: str, format: str = "QUAKEML") -> Dict[st
     Returns:
         包含下载结果信息的字典
     """
+    if not catalog_data:
+        return {
+            "clarification_needed": True,
+            "missing_params": ["catalog_data"],
+            "output": "缺少参数：catalog_data，请补充。"
+        }
     logger.info(f"调用 download_catalog_data: {catalog_data}, 格式: {format}")
     try:
         starttime, endtime, minmagnitude = catalog_data.split("|")
@@ -506,6 +568,20 @@ def download_catalog_data(catalog_data: str, format: str = "QUAKEML") -> Dict[st
 
 def retrieve_stations(network: str, station: str, starttime: str, endtime: str) -> Dict[str, Any]:
     """获取台站信息"""
+    params = {
+        "network": network,
+        "station": station,
+        "starttime": starttime,
+        "endtime": endtime
+    }
+    required = ["network", "station", "starttime", "endtime"]
+    missing = check_required_params(params, required)
+    if missing:
+        return {
+            "clarification_needed": True,
+            "missing_params": missing,
+            "output": f"缺少参数：{', '.join(missing)}，请补充。"
+        }
     logger.info(f"调用 retrieve_stations: {network}.{station}")
     try:
         inventory = client.robust_call(
@@ -567,6 +643,12 @@ def download_stations(station_data: str, format: str = "STATIONXML") -> Dict[str
     Returns:
         包含下载结果信息的字典
     """
+    if not station_data:
+        return {
+            "clarification_needed": True,
+            "missing_params": ["station_data"],
+            "output": "缺少参数：station_data，请补充。"
+        }
     logger.info(f"调用 download_stations: {station_data}, 格式: {format}")
     try:
         network, station, starttime, endtime = station_data.split("|")
@@ -659,6 +741,12 @@ def plot_stations(station_data: str, map_type: str = "global") -> Dict[str, Any]
     Returns:
         包含绘图结果信息的字典
     """
+    if not station_data:
+        return {
+            "clarification_needed": True,
+            "missing_params": ["station_data"],
+            "output": "缺少参数：station_data，请补充。"
+        }
     logger.info(f"调用 plot_stations: {station_data}, 地图类型: {map_type}")
     try:
         network, station, starttime, endtime = station_data.split("|")

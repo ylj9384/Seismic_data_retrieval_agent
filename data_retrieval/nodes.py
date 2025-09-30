@@ -3,14 +3,15 @@ import json
 from typing import Dict, Any
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from .state import AgentState
-from .llm import get_kimi_llm
+from config.llm import get_kimi_llm, get_qwen_llm
 from .prompt_templates import create_system_prompt
 
 logger = logging.getLogger(__name__)
 
 def llm_node(state: AgentState) -> Dict:
     """LLM 节点：处理用户输入，决定下一步行动"""
-    llm = get_kimi_llm()
+    # llm = get_kimi_llm()
+    llm = get_qwen_llm()
     
     # 构建历史消息
     messages = [SystemMessage(content=create_system_prompt())]
