@@ -6,6 +6,9 @@ from langgraph.graph import StateGraph, END
 from pydantic import BaseModel, Field
 from .registry import registry
 from .state import AgentSupervisorState
+from .dialogue_manager import dialogue_manager
+from .clarification import generate_clarification_prompt
+
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -145,6 +148,8 @@ def execute_agent(state: AgentSupervisorState, agent_id: str):
                     "成功绘制", "图表路径", "图像已生成", "波形图已绘制",
                     "查询结果", "查询完成", "数据检索完成", "数据已保存"
                 ]
+
+                clarification_keywords = ["请补充", "请提供", "缺少", "补全", "补充参数"]
                 
                 # 2. 检测数据类型
                 has_waveform_data = any(kw in output_lower for kw in [
@@ -184,6 +189,10 @@ def execute_agent(state: AgentSupervisorState, agent_id: str):
                 )
                 
                 # 5. 决策逻辑
+                # 如果出现需要补充的提示，则直接返回给用户，等待补充
+                if any(kw in output_lower for kw in clarification_keywords):
+                    state["finished"] = True
+                    logger.info("检测到追问，直接返回给用户，等待补充")
                 if has_plot and any(kw in output_lower for kw in ["图表路径", "成功绘制", "已生成图像"]):
                     # 绘图已完成，直接标记结束
                     state["finished"] = True
@@ -224,6 +233,133 @@ def execute_agent(state: AgentSupervisorState, agent_id: str):
         state["messages"].append(AIMessage(content=error_message))
         state["sender"] = "ai"
         return state
+
+# def execute_agent(state: AgentSupervisorState, agent_id: str):
+#     logger.info(f"执行Agent: {agent_id}")
+#     state["current_agent"] = agent_id
+
+#     try:
+#         agent = registry.build_agent(agent_id)
+#         state_class = registry.get_state_class(agent_id)
+#         agent_context = prepare_agent_context(agent_id, state["query"], state["context"])
+#         initial_state = state_class(agent_context)
+#         result = agent.invoke(initial_state)
+#         state["result"] = result
+#         update_context(agent_id, result, state["context"])
+
+#         # === HITL追问逻辑开始 ===
+#         if result.get("clarification_needed"):
+#             # 记录追问历史
+#             missing_params = result.get("missing_params", [])
+#             prompt = generate_clarification_prompt(
+#                 missing_params, 
+#                 context=state["context"], 
+#                 tool_name=agent_id
+#             )
+#             logger.info(f"参数不全，生成追问: {prompt}")
+#             # 写入最终响应，主流程应等待用户补充
+#             state["final_response"] = prompt
+#             state["finished"] = True  # 标记本轮结束，等待用户补充
+#             state["messages"].append(AIMessage(content=prompt))
+#             state["sender"] = "ai"
+#             return state
+#         # === HITL追问逻辑结束 ===
+
+#         if "output" in result and result["output"]:
+#             logger.info(f"Agent响应: {result['output'][:100]}...")
+#             state["messages"].append(AIMessage(content=result["output"]))
+#             state["sender"] = "ai"
+            
+#             # 提取输出文本并转换为小写，方便检测关键词
+#             output_lower = result["output"].lower()
+            
+#             # 根据agent类型进行特定判断
+#             if agent_id == "data_retrieval":
+#                 # 1. 检测任务完成标志
+#                 completion_keywords = [
+#                     "已成功获取", "成功下载", "完成分析", "数据获取成功", 
+#                     "已保存到", "已下载到", "图表已生成", "绘制成功",
+#                     "成功绘制", "图表路径", "图像已生成", "波形图已绘制",
+#                     "查询结果", "查询完成", "数据检索完成", "数据已保存"
+#                 ]
+                
+#                 # 2. 检测数据类型
+#                 has_waveform_data = any(kw in output_lower for kw in [
+#                     "波形数据", "波形图", "波形文件", "mseed", "sac", "波形已", "波形图已", "波形信息", "完整波形"
+#                 ])
+                
+#                 has_event_data = any(kw in output_lower for kw in [
+#                     "地震事件", "地震目录", "震级", "地震数据", "地震发生", "地震列表"
+#                 ])
+                
+#                 has_station_data = any(kw in output_lower for kw in [
+#                     "台站数据", "台站信息", "台站分布", "台站位置"
+#                 ])
+                
+#                 # 3. 检测文件和图表生成
+#                 has_file = "数据文件:" in output_lower or "数据文件：" in output_lower or result.get("data_file")
+#                 has_plot = "图表路径:" in output_lower or "图表路径：" in output_lower or result.get("plot_path")
+                
+#                 # 4. 检测可能需要的后续操作
+#                 needs_visualization = (
+#                     (has_waveform_data or has_event_data or has_station_data) and 
+#                     not has_plot and
+#                     any(kw in state["query"].lower() for kw in ["可视化", "画图", "绘制", "展示", "显示"])
+#                 )
+                
+#                 needs_download = (
+#                     (has_waveform_data or has_event_data or has_station_data) and 
+#                     not has_file and
+#                     any(kw in state["query"].lower() for kw in ["下载", "保存", "导出"])
+#                 )
+                
+#                 # 波形分析检测 - 当有波形数据且查询中提到分析/识别时
+#                 needs_phase_analysis = (
+#                     has_waveform_data and has_file and
+#                     ("phase_detection" in registry.metadata) and
+#                     any(kw in state["query"].lower() for kw in ["分析", "识别", "检测", "拾取", "p波", "s波", "震相"])
+#                 )
+                
+#                 # 5. 决策逻辑
+#                 if has_plot and any(kw in output_lower for kw in ["图表路径", "成功绘制", "已生成图像"]):
+#                     # 绘图已完成，直接标记结束
+#                     state["finished"] = True
+#                     logger.info("绘图任务已完成，标记为结束")
+#                 elif needs_phase_analysis:
+#                     # 优先考虑震相检测需求
+#                     state["next_agent"] = "phase_detection"
+#                     logger.info("检测到波形分析需求，切换到phase_detection")
+#                 elif any(kw in output_lower for kw in completion_keywords) and not needs_visualization and not needs_download:
+#                     # 如果已完成且不需要进一步处理，标记结束
+#                     state["finished"] = True
+#                     logger.info("数据检索任务已完成，无需进一步处理")
+#                 else:
+#                     # 其他情况，让LLM在下一轮路由决策
+#                     # 记录当前状态信息以辅助决策
+#                     if has_waveform_data:
+#                         state["context"]["has_waveform_data"] = True
+#                     if has_event_data:
+#                         state["context"]["has_event_data"] = True
+#                     if has_station_data:
+#                         state["context"]["has_station_data"] = True
+#                     if has_plot:  # 添加这行，记录图像已生成
+#                         state["context"]["has_plot"] = True
+            
+#             # 震相检测agent完成后直接标记为结束
+#             elif agent_id == "phase_detection":
+#                 completion_keywords = ["震相识别完成", "拾取完成", "分析完成", "检测结果", "已标记p波", "已标记s波"]
+#                 if any(kw in output_lower for kw in completion_keywords):
+#                     state["finished"] = True
+#                     logger.info("震相检测已完成，标记为结束")
+#         return state
+
+#     except Exception as e:
+#         logger.error(f"执行Agent {agent_id}失败: {e}")
+#         error_message = f"执行Agent {agent_id}时出错: {str(e)}"
+#         state["result"] = {"error": error_message, "output": error_message}
+#         state["messages"].append(AIMessage(content=error_message))
+#         state["sender"] = "ai"
+#         return state
 
 def prepare_agent_context(agent_id: str, query: str, context: Dict[str, Any]) -> Dict[str, Any]:
     """准备Agent执行上下文"""

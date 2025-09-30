@@ -3,6 +3,8 @@ from typing import Dict, Any
 from langchain_openai import ChatOpenAI
 from .registry import registry, register_default_agents
 from .agent_supervisor import AgentSupervisorOrchestrator
+from typing import Dict, Any
+from orchestrator.schemas import OrchestratorResult
 
 logger = logging.getLogger(__name__)
 

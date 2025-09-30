@@ -160,8 +160,8 @@ registry = AgentRegistry()
 def register_default_agents():
     """注册默认的Agent"""
     # 导入数据检索Agent
-    from agent.agent_initializer import build_agent as build_data_agent
-    from agent.state import AgentState as DataAgentState
+    from data_retrieval.agent_initializer import build_agent as build_data_agent
+    from data_retrieval.state import AgentState as DataAgentState
     
     # 注册数据检索Agent
     registry.register(
