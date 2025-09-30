@@ -3,14 +3,15 @@ import json
 from typing import Dict, Any
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from .state import PhaseDetectionState
-from data_retrieval.llm import get_kimi_llm  # 复用现有的LLM
+from config.llm import get_kimi_llm, get_qwen_llm  # 复用现有的LLM
 from .prompt_templates import create_system_prompt
 
 logger = logging.getLogger(__name__)
 
 def llm_node(state: PhaseDetectionState) -> Dict:
     """LLM 节点：处理用户输入，决定下一步行动"""
-    llm = get_kimi_llm()
+    # llm = get_kimi_llm()
+    llm = get_qwen_llm()
     
     # 构建历史消息
     messages = [SystemMessage(content=create_system_prompt())]

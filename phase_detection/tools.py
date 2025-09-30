@@ -44,6 +44,11 @@ class ModelManager:
 # 实例化模型管理器
 model_manager = ModelManager()
 
+def check_required_params(params: dict, required: list):
+    """检查必需参数是否齐全，返回缺失项列表"""
+    missing = [p for p in required if not params.get(p)]
+    return missing
+
 def detect_and_plot_phases(
     waveform_file: str, 
     model_name: str = "PhaseNet", 
@@ -53,6 +58,16 @@ def detect_and_plot_phases(
     show_probability: bool = True
 ) -> Dict[str, Any]:
     """使用深度学习模型进行震相拾取并直接绘制结果"""
+    # 参数校验
+    params = {"waveform_file": waveform_file}
+    missing = check_required_params(params, ["waveform_file"])
+    if missing:
+        return {
+            "clarification_needed": True,
+            "missing_params": missing,
+            "output": f"缺少参数：{', '.join(missing)}，请补充。"
+        }
+    
     import os
     import pickle
     import numpy as np
@@ -448,6 +463,15 @@ def evaluate_detection_quality(detection_result: str) -> Dict[str, Any]:
     Returns:
         包含评估结果的字典
     """
+    params = {"detection_result": detection_result}
+    missing = check_required_params(params, ["detection_result"])
+    if missing:
+        return {
+            "clarification_needed": True,
+            "missing_params": missing,
+            "output": f"缺少参数：{', '.join(missing)}，请补充。"
+        }
+    
     logger.info(f"评估检测质量: {detection_result}")
     
     try:
@@ -539,6 +563,7 @@ def evaluate_detection_quality(detection_result: str) -> Dict[str, Any]:
 
 def list_available_models() -> Dict[str, Any]:
     """列出可用的震相拾取与事件检测模型"""
+    # 无必需参数，无需校验
     try:
         models_info = {
             "PhaseNet": {
@@ -582,6 +607,16 @@ def compare_models(waveform_file: str, models: List[str] = None) -> Dict[str, An
     Returns:
         包含比较结果的字典
     """
+    # 参数校验
+    params = {"waveform_file": waveform_file}
+    missing = check_required_params(params, ["waveform_file"])
+    if missing:
+        return {
+            "clarification_needed": True,
+            "missing_params": missing,
+            "output": f"缺少参数：{', '.join(missing)}，请补充。"
+        }
+    
     logger.info(f"比较模型震相拾取结果: {waveform_file}")
     
     if not models:
