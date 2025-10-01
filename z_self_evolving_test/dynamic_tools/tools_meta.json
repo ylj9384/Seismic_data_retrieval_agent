@@ -1,0 +1,55 @@
+{
+  "calculate_detection_radius": {
+    "desc": "根据经验公式估算地震在地表的影响半径（单位：km）",
+    "signature": "(depth: float, magnitude: float)",
+    "origin": "dynamic",
+    "module": "z_self_evolving_test.dynamic_tools.tool_calculate_detection_radius",
+    "name": "calculate_detection_radius",
+    "uses": 0,
+    "success": 0
+  },
+  "calculate_pga_esteva_rosenblueth": {
+    "desc": "根据 Esteva 和 Rosenblueth (1964) 的经验公式计算峰值地面加速度（PGA），输入震级、震中距和模型参数。",
+    "signature": "(magnitude: float, distance: float, c: float = 0.001, alpha: float = 1.5, beta: float = 1.2) -> dict",
+    "origin": "dynamic",
+    "module": "z_self_evolving_test.dynamic_tools.tool_calculate_pga_esteva_rosenblueth",
+    "name": "calculate_pga_esteva_rosenblueth",
+    "uses": 2,
+    "success": 2
+  },
+  "calculate_pga_kanai_1966": {
+    "desc": "根据 Kanai (1966) 的 PGA 模型计算峰值地面加速度，输入震级、震中距、场地固有周期，并解释模型参数 P 和 Q 的含义及其影响。",
+    "signature": "(magnitude: float, distance: float, period: float) -> dict",
+    "origin": "dynamic",
+    "module": "z_self_evolving_test.dynamic_tools.tool_calculate_pga_kanai_1966",
+    "name": "calculate_pga_kanai_1966",
+    "uses": 2,
+    "success": 2
+  },
+  "query_earthquakes": {
+    "desc": "查询指定时间范围内震级大于5.0的地震事件",
+    "signature": "(start: str, end: str)",
+    "origin": "dynamic",
+    "module": "z_self_evolving_test.dynamic_tools.tool_query_earthquakes",
+    "name": "query_earthquakes",
+    "uses": 1,
+    "success": 1
+  },
+  "query_station_metadata": {
+    "desc": "查询台站元数据, 返回统一协议",
+    "signature": "(network: str, station: str, date: str)",
+    "origin": "dynamic",
+    "module": "z_self_evolving_test.dynamic_tools.tool_query_station_metadata",
+    "name": "query_station_metadata",
+    "uses": 0,
+    "success": 0
+  },
+  "fetch_waveforms": {
+    "desc": "获取地震波形摘要(network,station,start,end,channel, location)",
+    "signature": "(network, station, start, end, channel, location)",
+    "origin": "builtin",
+    "name": "fetch_waveforms",
+    "uses": 0,
+    "success": 0
+  }
+}

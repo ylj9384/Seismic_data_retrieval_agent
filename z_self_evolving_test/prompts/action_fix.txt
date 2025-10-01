@@ -1,0 +1,30 @@
+你需要修复一个生成失败的工具代码，使其满足统一协议并通过安全审查。
+
+用户需求：
+{user_query}
+
+上一版代码：
+{prev_code}
+
+错误信息：
+{error}
+
+【修复 Import 规则】
+若代码含 math./json./re./datetime. 且缺少 import 语句 → 直接补 import；否则放弃该工具。
+
+请输出一个 JSON：
+{{
+  "action":"propose_tool",
+  "name":"同名或合理新名(小写下划线)",
+  "desc":"简洁描述",
+  "code":"def 函数名(...):\\n    ... 需返回 status 协议 dict ...",
+  "tests":[{{"call":{{"name":"函数名","args":{{示例参数}}}},"assert":"status"}}]
+}}
+
+要求：
+- 仅一个函数；返回 dict 且含 status(success/no_data/error)。
+- 捕获异常 return {{'status':'error','reason':'...'}}。
+- 无行尾反斜杠；不返回复杂对象；仅允许导入已声明模块。
+- 严格单个 JSON，无额外文本。
+仅输出 JSON。
+
